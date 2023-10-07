@@ -8,7 +8,7 @@ import java.util.Scanner;
 class Item {
     private final String type;
     protected double rate;
-    private int qty;
+    protected int qty;
     public Item(String type, double rate) {
         this.type = type;
         this.rate = rate;
@@ -41,6 +41,8 @@ class Room extends Item{
     public double getRatePlus() {
         return rate + (rate * 0.1) + ((rate + (rate * 0.1)) * 0.07);
     }
+
+    public double getBill() { return getRatePlus() * this.qty; };
 
 }
 
