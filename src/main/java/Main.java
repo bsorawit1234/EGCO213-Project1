@@ -1,8 +1,5 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
 
 class Item {
     private final String type;
@@ -26,6 +23,7 @@ class Item {
     public double getBill() {
         return this.rate * this.qty;
     }
+    public int getQty() { return qty; }
 }
 
 class Room extends Item{
@@ -41,7 +39,7 @@ class Room extends Item{
         return rate + (rate * 0.1) + ((rate + (rate * 0.1)) * 0.07);
     }
 
-    public double getBill() { return getRatePlus() * this.qty; };
+    public double getBill() { return getRatePlus() * this.qty; }
 
 }
 
@@ -103,23 +101,45 @@ class HotelList {
 
 
 class Customer {
-    String name;
-    double cashback;
+    private String name;
+    private int cashBack;
+    private int singleRooms;
+    private int twinRooms;
+    private int trippleRooms;
+    private int singleDormRooms;
+    private int mealHeads;
 
     public Customer(String n) {
         name = n;
+        cashBack = 0;
+        singleRooms = 0;
+        twinRooms = 0;
+        trippleRooms = 0;
+        singleDormRooms = 0;
+        mealHeads = 0;
     }
+
+    public String getName() { return name; }
+    public int getCashBack() { return cashBack; }
+    public void setCashBack(int c) { cashBack = c; }
+    public void setSingleRooms(int r) { singleRooms += r; }
+    public void setSingleDormRooms(int r) { singleDormRooms += r;}
+    public void setTwinRooms(int r) { twinRooms += r; }
+    public void setTrippleRooms(int r) { trippleRooms += r; }
+    public void setMealHeads(int h) { mealHeads += h; }
 }
 
 class Booking {
     int bookingID;
+    ArrayList<Customer> CL = new ArrayList<Customer>();
 
     public Booking() {
         String path = "src/main/java/";
         String fileName = "bookings.txt";
-        int night, singleR, twinR, tripleR, singledormB, headsBreakfast;
-        boolean openSuccess = false;
+        HotelList h = new HotelList();
+        ArrayList<Item> hl = h.menu("hotel.txt");
 
+        boolean openSuccess = false;
         while (!openSuccess) {
             try (Scanner scan = new Scanner(new File(path + fileName));) {
                 openSuccess = true;
@@ -127,39 +147,45 @@ class Booking {
                 System.out.println("===== Booking Processing =====");
                 ArrayList<Customer> CL = new ArrayList<Customer>();
 
-                for(int i = 0; scan.hasNext(); i++) {
+                while(scan.hasNext()) {
                     String line = scan.nextLine();
                     String[] col = line.split(",");
 
                     bookingID = Integer.parseInt(col[0].trim());
+                    int night = Integer.parseInt(col[2].trim());
+                    int single = Integer.parseInt(col[3].trim());
+                    int twin = Integer.parseInt(col[4].trim());
+                    int tripple = Integer.parseInt(col[5].trim());
+                    int singleDorm = Integer.parseInt(col[6].trim());
+                    int meal = Integer.parseInt(col[7].trim());
+
+                    ArrayList<Item> items = new ArrayList<Item>();
+                    items.add(new Room("R", hl.get(0).getRate(), single));
+                    items.add(new Room("R", hl.get(1).getRate(), twin));
+                    items.add(new Room("R", hl.get(2).getRate(), tripple));
+                    items.add(new Room("R", hl.get(3).getRate(), singleDorm));
+                    items.add(new Meal("M", hl.get(4).getRate(), meal));
+
                     Customer cm = new Customer(col[1].trim());
-                    night = Integer.parseInt(col[2].trim());
-                    singleR = Integer.parseInt(col[3].trim());
-                    twinR = Integer.parseInt(col[4].trim());
-                    tripleR = Integer.parseInt(col[5].trim());
-                    singledormB = Integer.parseInt(col[6].trim());
-                    headsBreakfast = Integer.parseInt(col[7].trim());
-
-                    //Item it = new Item();
-
-                    process(bookingID, cm.name, night, singleR, twinR, tripleR, singledormB, headsBreakfast);
 
                     boolean duplicate = false;
-                    for (Customer item : CL) {
-                        if (item.name.equals(cm.name)) {
+                    for(Customer c : CL) {
+                        if(c.getName().equals(cm.getName())) {
                             duplicate = true;
-
-                            // add more code
+                            c.setSingleRooms(single);
+                            c.setSingleDormRooms(singleDorm);
+                            c.setTwinRooms(twin);
+                            c.setTrippleRooms(tripple);
+                            c.setMealHeads(meal);
+                            cm = c;
                             break;
                         }
                     }
+                    if(!duplicate) CL.add(cm);
 
-                    if(!duplicate) {
-                        CL.add(cm);
-                    }
 
+                    process(bookingID, cm, night, items);
                 }
-                for(Customer c: CL) System.out.println(c.name);
 
 
             } catch (FileNotFoundException e) {
@@ -168,17 +194,42 @@ class Booking {
         }
     }
 
-    public void process(int bookingID, String name, int night, int singleR, int twinR,int tripleR, int singledormB, int headsBreakfast) {
-        System.out.printf("Booking%3d, %s,%4d nights   >> Single Room (  %3d)    Twin Room (  %3d)    Triple Room (  %3d)    Single Dorm Bed (  %3d)    Breakfast(  %3d)\n", bookingID, name, night, singleR, twinR, tripleR, singledormB, headsBreakfast);
+    public void process(int id, Customer c, int n, ArrayList<Item> items) {
+        double totalRoomPrice;
+        double totalMealPrice = items.get(4).getBill() * n;
+        double totalBill = 0;
+        double finalBill;
+        int cashback;
+        int redeem = c.getCashBack();
 
+        for(Item i : items) {
+            totalBill += i.getBill();
+        }
+
+        totalBill *= n;
+        totalRoomPrice = totalBill - totalMealPrice;
+
+        cashback = (int)(totalRoomPrice * 0.05);
+
+        if(redeem > totalBill * 0.5) {
+            cashback += redeem - (int)(totalBill * 0.5);
+            redeem = (int)(totalBill * 0.5);
+        }
+
+        finalBill = totalBill - redeem;
+
+        System.out.printf("Booking%3d, %s,%4d nights   >> Single Room (  %3d)    Twin Room (  %3d)    Triple Room (  %3d)    Single Dorm Bed (  %3d)    Breakfast(  %3d)\n", id, c.getName(), n, items.get(0).getQty(), items.get(1).getQty(), items.get(2).getQty(), items.get(3).getQty(), items.get(4).getQty());
+        System.out.printf("Available cashback = %-,5d      >> Total room price++    =   %,6.2f    with service charge and VAT\n", c.getCashBack(), totalRoomPrice);
+        System.out.printf("                                >> Total meal price      =   %,6.2f\n", totalMealPrice);
+        System.out.printf("                                >> Total bill            =   %,6.2f    redeem = %,d\n", totalBill, redeem);
+        System.out.printf("                                >> Final bill            =   %,6.2f    cashback for next booking = %,d\n", finalBill, cashback);
+
+        c.setCashBack(cashback);
     }
 }
 
 public class Main {
     public static void main(String[] args) {
-
-        HotelList h = new HotelList();
-        h.menu("hotel.txt"); //valid name for hotel file :)
         Booking b1 = new Booking();
     }
 }
