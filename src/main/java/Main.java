@@ -102,48 +102,61 @@ class HotelList {
 
 class Customer {
     private String name;
-    private int cashBack;
-    private int singleRooms;
-    private int twinRooms;
-    private int trippleRooms;
-    private int singleDormRooms;
-    private int mealHeads;
+    private int cashBack, singleRooms, twinRooms, trippleRooms, singleDormRooms, mealHeads;
+    private Double singleRoomsPrice, twinRoomsPrice, trippleRoomsPrice, singleDormRoomsPrice, mealHeadsPrice;
 
     public Customer(String n) {
         name = n;
-        cashBack = 0;
-        singleRooms = 0;
-        twinRooms = 0;
-        trippleRooms = 0;
-        singleDormRooms = 0;
-        mealHeads = 0;
+        cashBack = 0; singleRooms = 0; twinRooms = 0; trippleRooms = 0; singleDormRooms = 0; mealHeads = 0;
+        singleRoomsPrice = 0.00; twinRoomsPrice = 0.00; trippleRoomsPrice = 0.00; singleDormRoomsPrice = 0.00; mealHeadsPrice = 0.00;
     }
 
     public String getName() { return name; }
     public int getCashBack() { return cashBack; }
     public void setCashBack(int c) { cashBack = c; }
     public void setSingleRooms(int r) { singleRooms += r; }
+    public int getSingleRooms() { return singleRooms; }
+    public void setSingleRoomsPrice(double r) { singleRoomsPrice += r; }
+    public double getSingleRoomsPrice() { return singleRoomsPrice; }
     public void setSingleDormRooms(int r) { singleDormRooms += r;}
+    public int getSingleDormRooms() { return singleDormRooms; }
+    public void setSingleDormRoomsPrice(double r) { singleDormRoomsPrice += r;}
+    public double getSingleDormRoomsPrice() { return singleDormRoomsPrice;}
     public void setTwinRooms(int r) { twinRooms += r; }
+    public void setTwinRoomsPrice(double r) { twinRoomsPrice += r; }
+    public int getTwinRooms() { return twinRooms; }
+    public double getTwinRoomsPrice() { return twinRoomsPrice; }
     public void setTrippleRooms(int r) { trippleRooms += r; }
+    public int getTrippleRooms() { return trippleRooms; }
+    public void setTrippleRoomsPrice(double r) { trippleRoomsPrice += r; }
+    public double getTrippleRoomsPrice() { return trippleRoomsPrice; }
     public void setMealHeads(int h) { mealHeads += h; }
+    public void setMealHeadsPrice(double h) { mealHeadsPrice += h; }
+    public int getMealHeads() { return mealHeads; }
+    public double getMealHeadsPrice() { return mealHeadsPrice; }
 }
 
 class Booking {
     int bookingID;
     ArrayList<Customer> CL = new ArrayList<Customer>();
+    Double totsales = 0.00;
+    HotelList h = new HotelList();
+    ArrayList<Item> hl = h.menu("hotel.txt");
+    public double getRatePlus(int i) {
+        return hl.get(i).getRate() + (hl.get(i).getRate() * 0.1) + ((hl.get(i).getRate() + (hl.get(i).getRate() * 0.1)) * 0.07);
+    }
 
     public Booking() {
         String path = "src/main/java/";
-        String fileName = "bookings.txt";
-        HotelList h = new HotelList();
-        ArrayList<Item> hl = h.menu("hotel.txt");
+        String filename = "bookings.txt";
+        Scanner keyboardScan = new Scanner(System.in);
+        Customer c1 = new Customer("");
 
         boolean openSuccess = false;
         while (!openSuccess) {
-            try (Scanner scan = new Scanner(new File(path + fileName));) {
+            try (Scanner scan = new Scanner(new FileReader(path + filename));) {
                 openSuccess = true;
-                System.out.printf("\nRead booking data from file %s%s \n\n\n", path, fileName);
+                System.out.printf("\nRead booking data from file %s%s \n\n\n", path, filename);
                 System.out.println("===== Booking Processing =====");
                 ArrayList<Customer> CL = new ArrayList<Customer>();
 
@@ -159,12 +172,24 @@ class Booking {
                     int singleDorm = Integer.parseInt(col[6].trim());
                     int meal = Integer.parseInt(col[7].trim());
 
+                    c1.setTwinRooms(twin*night);
+                    c1.setTwinRoomsPrice(twin*night*getRatePlus(1));
+                    c1.setSingleDormRooms(singleDorm*night);
+                    c1.setSingleDormRoomsPrice(singleDorm*night*getRatePlus(3));
+                    c1.setTrippleRooms(tripple*night);
+                    c1.setTrippleRoomsPrice(tripple*night*getRatePlus(2));
+                    c1.setSingleRooms(single*night);
+                    c1.setSingleRoomsPrice(single*night*getRatePlus(0));
+                    c1.setMealHeads(meal*night);
+                    c1.setMealHeadsPrice(meal*night*hl.get(4).getRate());
+
                     ArrayList<Item> items = new ArrayList<Item>();
                     items.add(new Room("R", hl.get(0).getRate(), single));
                     items.add(new Room("R", hl.get(1).getRate(), twin));
                     items.add(new Room("R", hl.get(2).getRate(), tripple));
                     items.add(new Room("R", hl.get(3).getRate(), singleDorm));
                     items.add(new Meal("M", hl.get(4).getRate(), meal));
+
 
                     Customer cm = new Customer(col[1].trim());
 
@@ -174,7 +199,7 @@ class Booking {
                             duplicate = true;
                             c.setSingleRooms(single);
                             c.setSingleDormRooms(singleDorm);
-                            c.setTwinRooms(twin);
+                            c.setTwinRooms(twin*night);
                             c.setTrippleRooms(tripple);
                             c.setMealHeads(meal);
                             cm = c;
@@ -186,12 +211,22 @@ class Booking {
 
                     process(bookingID, cm, night, items);
                 }
-
-
             } catch (FileNotFoundException e) {
-                System.err.println(e);
+                System.out.println(e);
+                System.out.println("Enter file name for booking data = ");
+                filename = keyboardScan.nextLine();
             }
         }
+
+        keyboardScan.close();
+
+        System.out.println("===== Room Summary =====");
+        System.out.printf("Twin Room          total sales = %5d rooms         %,.2f  Bahts\n", c1.getTwinRooms(), c1.getTwinRoomsPrice());
+        System.out.printf("Single Dorm Bed    total sales = %5d rooms         %,.2f  Bahts\n", c1.getSingleDormRooms(), c1.getSingleDormRoomsPrice());
+        System.out.printf("Triple Room        total sales = %5d rooms         %,.2f  Bahts\n", c1.getTrippleRooms(), c1.getTrippleRoomsPrice());
+        System.out.printf("Single Room        total sales = %5d rooms         %,.2f  Bahts\n\n", c1.getSingleRooms(), c1.getSingleRoomsPrice());
+        System.out.println("===== Meal Summary =====");
+        System.out.printf("Breakfast          total sales = %5d heads         %,.2f  Bahts\n", c1.getMealHeads(), c1.getMealHeadsPrice());
     }
 
     public void process(int id, Customer c, int n, ArrayList<Item> items) {
@@ -222,7 +257,7 @@ class Booking {
         System.out.printf("Available cashback = %-,5d      >> Total room price++    =   %,6.2f    with service charge and VAT\n", c.getCashBack(), totalRoomPrice);
         System.out.printf("                                >> Total meal price      =   %,6.2f\n", totalMealPrice);
         System.out.printf("                                >> Total bill            =   %,6.2f    redeem = %,d\n", totalBill, redeem);
-        System.out.printf("                                >> Final bill            =   %,6.2f    cashback for next booking = %,d\n", finalBill, cashback);
+        System.out.printf("                                >> Final bill            =   %,6.2f    cashback for next booking = %,d\n\n", finalBill, cashback);
 
         c.setCashBack(cashback);
     }
