@@ -1,2 +1,4 @@
-package PACKAGE_NAME;public class MissingInputException {
+public class MissingInputException extends Exception {
+    public MissingInputException(String msg) {super(msg);}
 }
+
