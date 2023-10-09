@@ -67,7 +67,7 @@ class HotelList {
 
         while (!openSuccess) {
             try (
-                    Scanner scan = new Scanner(new FileReader(path + filename));
+                    Scanner scan = new Scanner(new FileInputStream(path + filename), "UTF-8")
             ) {
                 openSuccess = true;
                 System.out.printf("Read hotel data from file %s%s \n\n", path, filename);
@@ -83,18 +83,16 @@ class HotelList {
                     } else if (character.equals("M")) {
                         Meal meal = new Meal(type, rate);
                         hotel.add(meal);
-                    } else {
-                        //throw exception invalid character or something.
                     }
                 }
             } catch (FileNotFoundException e) {
                 System.out.println(e);
                 System.out.println("Enter file name for hotel data = ");
                 filename = keyboardScan.nextLine();
+                keyboardScan.nextLine();
             }
         }
 
-        keyboardScan.close();
         return hotel;
     }
 }
@@ -138,6 +136,7 @@ class Customer {
 
 class Booking {
     int bookingID;
+    public static int flag;
     ArrayList<Customer> CL = new ArrayList<Customer>();
     Double totsales = 0.00;
     HotelList h = new HotelList();
@@ -146,79 +145,136 @@ class Booking {
         return hl.get(i).getRate() + (hl.get(i).getRate() * 0.1) + ((hl.get(i).getRate() + (hl.get(i).getRate() * 0.1)) * 0.07);
     }
 
+    public int parseAndValidate(String[] col, int index, int expectedCol) {
+        try {
+            if(col.length < expectedCol) {
+                throw new MissingInputException(String.valueOf(expectedCol - col.length) + " columns missing");
+            }
+            int value = Integer.parseInt(col[index].trim());
+            if (value < 0) {
+                throw new InvalidInputException("For input: \"" + value + "\"");
+            }
+            return value;
+        } catch (NumberFormatException | InvalidInputException | MissingInputException e) {
+            System.out.println(e);
+        }
+        flag = 0;
+        return 0;
+    }
+
     public Booking() {
         String path = "src/main/java/";
-        String filename = "bookings.txt";
-        Scanner keyboardScan = new Scanner(System.in);
+        String filename = "bookings_errors.txt";
+        Scanner scanner = new Scanner(System.in);
         Customer c1 = new Customer("");
-
         boolean openSuccess = false;
-        while (!openSuccess) {
-            try (Scanner scan = new Scanner(new FileReader(path + filename));) {
+        int expectedCol = 8;
+
+        while(!openSuccess) {
+            try (
+                    Scanner keyScan = new Scanner(new FileInputStream(path + filename), "UTF-8");
+                    ) {
                 openSuccess = true;
                 System.out.printf("\nRead booking data from file %s%s \n\n\n", path, filename);
-                System.out.println("===== Booking Processing =====");
                 ArrayList<Customer> CL = new ArrayList<Customer>();
+                ArrayList<String> value = new ArrayList<>();
 
-                while(scan.hasNext()) {
-                    String line = scan.nextLine();
-                    String[] col = line.split(",");
+                ArrayList<Integer> ID = new ArrayList<Integer>();
+                ArrayList<Integer> night = new ArrayList<Integer>();
+                ArrayList<Integer> single = new ArrayList<Integer>();
+                ArrayList<Integer> twin = new ArrayList<Integer>();
+                ArrayList<Integer> tripple = new ArrayList<Integer>();
+                ArrayList<Integer> singleDorm = new ArrayList<Integer>();
+                ArrayList<Integer> meal = new ArrayList<Integer>();
+                ArrayList<String> name = new ArrayList<String>();
 
-                    bookingID = Integer.parseInt(col[0].trim());
-                    int night = Integer.parseInt(col[2].trim());
-                    int single = Integer.parseInt(col[3].trim());
-                    int twin = Integer.parseInt(col[4].trim());
-                    int tripple = Integer.parseInt(col[5].trim());
-                    int singleDorm = Integer.parseInt(col[6].trim());
-                    int meal = Integer.parseInt(col[7].trim());
+                String line;
+                String[] col;
+                int in = 0;
 
-                    c1.setTwinRooms(twin*night);
-                    c1.setTwinRoomsPrice(twin*night*getRatePlus(1));
-                    c1.setSingleDormRooms(singleDorm*night);
-                    c1.setSingleDormRoomsPrice(singleDorm*night*getRatePlus(3));
-                    c1.setTrippleRooms(tripple*night);
-                    c1.setTrippleRoomsPrice(tripple*night*getRatePlus(2));
-                    c1.setSingleRooms(single*night);
-                    c1.setSingleRoomsPrice(single*night*getRatePlus(0));
-                    c1.setMealHeads(meal*night);
-                    c1.setMealHeadsPrice(meal*night*hl.get(4).getRate());
+                while (keyScan.hasNext()) {
+                    line = keyScan.nextLine();
+                    col = line.split(",");
+
+                    name.add(col[1].trim());
+                    ID.add(parseAndValidate(col, 0, expectedCol));
+                    night.add(parseAndValidate(col, 2, expectedCol));
+                    single.add(parseAndValidate(col, 3, expectedCol));
+                    twin.add(parseAndValidate(col, 4, expectedCol));
+                    tripple.add(parseAndValidate(col, 5, expectedCol));
+                    singleDorm.add(parseAndValidate(col, 6, expectedCol));
+                    meal.add(parseAndValidate(col, 7, expectedCol));
+
+                    String[] newCol = new String[8];
+                    newCol[0] = String.valueOf((ID.get(in)));
+                    newCol[1] = col[1].trim();
+                    newCol[2] = String.valueOf((night.get(in)));
+                    newCol[3] = String.valueOf((single.get(in)));
+                    newCol[4] = String.valueOf((twin.get(in)));
+                    newCol[5] = String.valueOf((tripple.get(in)));
+                    newCol[6] = String.valueOf((singleDorm.get(in)));
+                    newCol[7] = String.valueOf((meal.get(in)));
+
+
+                    if(flag == 0) {
+                        System.out.println("Original [" + line + "]  -->  Correction  [" + String.join(", ", newCol) + "]\n");
+                        flag = 1;
+                    }
+
+                    in++;
+                }
+
+                System.out.println("===== Booking Processing =====");
+                for(int i = 0; i < ID.size(); i++) {
+                    c1.setTwinRooms(twin.get(i) * night.get(i));
+                    c1.setTwinRoomsPrice(twin.get(i) * night.get(i) * getRatePlus(1));
+                    c1.setSingleDormRooms(singleDorm.get(i) * night.get(i));
+                    c1.setSingleDormRoomsPrice(singleDorm.get(i) * night.get(i) * getRatePlus(3));
+                    c1.setTrippleRooms(tripple.get(i) * night.get(i));
+                    c1.setTrippleRoomsPrice(tripple.get(i) * night.get(i) * getRatePlus(2));
+                    c1.setSingleRooms(single.get(i) * night.get(i));
+                    c1.setSingleRoomsPrice(single.get(i) * night.get(i) * getRatePlus(0));
+                    c1.setMealHeads(meal.get(i) * night.get(i));
+                    c1.setMealHeadsPrice(meal.get(i) * night.get(i) * hl.get(4).getRate());
 
                     ArrayList<Item> items = new ArrayList<Item>();
-                    items.add(new Room("R", hl.get(0).getRate(), single));
-                    items.add(new Room("R", hl.get(1).getRate(), twin));
-                    items.add(new Room("R", hl.get(2).getRate(), tripple));
-                    items.add(new Room("R", hl.get(3).getRate(), singleDorm));
-                    items.add(new Meal("M", hl.get(4).getRate(), meal));
+                    items.add(new Room("R", hl.get(0).getRate(), single.get(i)));
+                    items.add(new Room("R", hl.get(1).getRate(), twin.get(i)));
+                    items.add(new Room("R", hl.get(2).getRate(), tripple.get(i)));
+                    items.add(new Room("R", hl.get(3).getRate(), singleDorm.get(i)));
+                    items.add(new Meal("M", hl.get(4).getRate(), meal.get(i)));
 
 
-                    Customer cm = new Customer(col[1].trim());
+                    Customer cm = new Customer(name.get(i));
 
                     boolean duplicate = false;
-                    for(Customer c : CL) {
-                        if(c.getName().equals(cm.getName())) {
+                    for (Customer c : CL) {
+                        if (c.getName().equals(cm.getName())) {
                             duplicate = true;
-                            c.setSingleRooms(single);
-                            c.setSingleDormRooms(singleDorm);
-                            c.setTwinRooms(twin*night);
-                            c.setTrippleRooms(tripple);
-                            c.setMealHeads(meal);
+                            c.setSingleRooms(single.get(i));
+                            c.setSingleDormRooms(singleDorm.get(i));
+                            c.setTwinRooms(twin.get(i) * night.get(i));
+                            c.setTrippleRooms(tripple.get(i));
+                            c.setMealHeads(meal.get(i));
                             cm = c;
                             break;
                         }
                     }
-                    if(!duplicate) CL.add(cm);
+                    if (!duplicate) CL.add(cm);
 
+                    bookingID = ID.get(i);
+                    process(bookingID, cm, night.get(i), items);
 
-                    process(bookingID, cm, night, items);
                 }
+
             } catch (FileNotFoundException e) {
-                System.out.println(e);
-                System.out.println("Enter file name for booking data = ");
-                filename = keyboardScan.nextLine();
+                System.out.print(e);
+                System.out.println("\nEnter file name for booking data = ");
+                filename = scanner.nextLine();
             }
         }
 
-        keyboardScan.close();
+        scanner.close();
 
         System.out.println("===== Room Summary =====");
         System.out.printf("Twin Room          total sales = %5d rooms         %,.2f  Bahts\n", c1.getTwinRooms(), c1.getTwinRoomsPrice());
@@ -254,10 +310,10 @@ class Booking {
         finalBill = totalBill - redeem;
 
         System.out.printf("Booking%3d, %s,%4d nights   >> Single Room (  %3d)    Twin Room (  %3d)    Triple Room (  %3d)    Single Dorm Bed (  %3d)    Breakfast(  %3d)\n", id, c.getName(), n, items.get(0).getQty(), items.get(1).getQty(), items.get(2).getQty(), items.get(3).getQty(), items.get(4).getQty());
-        System.out.printf("Available cashback = %-,5d      >> Total room price++    =   %,6.2f    with service charge and VAT\n", c.getCashBack(), totalRoomPrice);
-        System.out.printf("                                >> Total meal price      =   %,6.2f\n", totalMealPrice);
-        System.out.printf("                                >> Total bill            =   %,6.2f    redeem = %,d\n", totalBill, redeem);
-        System.out.printf("                                >> Final bill            =   %,6.2f    cashback for next booking = %,d\n\n", finalBill, cashback);
+        System.out.printf("Available cashback = %-,5d      >> Total room price++    =   %,10.2f    with service charge and VAT\n", c.getCashBack(), totalRoomPrice);
+        System.out.printf("                                >> Total meal price      =   %,10.2f\n", totalMealPrice);
+        System.out.printf("                                >> Total bill            =   %,10.2f    redeem = %,d\n", totalBill, redeem);
+        System.out.printf("                                >> Final bill            =   %,10.2f    cashback for next booking = %,d\n\n", finalBill, cashback);
 
         c.setCashBack(cashback);
     }
