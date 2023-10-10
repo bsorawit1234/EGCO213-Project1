@@ -1,15 +1,15 @@
 import java.io.*;
 import java.util.*;
 
-class Item3 {
+class Item {
     private final String type;
     protected double rate;
     protected int qty;
-    public Item3(String type, double rate) {
+    public Item(String type, double rate) {
         this.type = type;
         this.rate = rate;
     }
-    public Item3(String type, double rate, int qty) {
+    public Item(String type, double rate, int qty) {
         this.type = type;
         this.rate = rate;
         this.qty = qty;
@@ -26,13 +26,13 @@ class Item3 {
     public int getQty() { return qty; }
 }
 
-class Room3 extends Item3 {
+class Room extends Item {
     private static double total_rooms;
-    public Room3(String type, double rate) {
+    public Room(String type, double rate) {
         super(type, rate);
         System.out.printf("%-22srate = %,10.2f     rate++ = %,10.2f\n", this.getType(), this.getRate(), this.getRatePlus());
     }
-    public Room3(String type, double rate, int qty) {super(type, rate, qty);}
+    public Room(String type, double rate, int qty) {super(type, rate, qty);}
 
     //rate with service charge & vat
     public double getRatePlus() {
@@ -43,25 +43,25 @@ class Room3 extends Item3 {
 
 }
 
-class Meal3 extends Item3 {
+class Meal extends Item {
     private static int total_meals;
-    public Meal3(String type, double rate) {
+    public Meal(String type, double rate) {
         super(type, rate);
         System.out.printf("%-22srate = %,10.2f     rate++ = %,10.2f\n", this.getType(), this.getRate(), this.getRate());
     }
-    public Meal3(String type, double rate, int qty) {
+    public Meal(String type, double rate, int qty) {
         super(type, rate, qty);
     }
 }
 
-class HotelList3 {
-    public ArrayList<Item3> menu(String file) {
+class HotelList {
+    public ArrayList<Item> menu(String file) {
         double rate;
         String character, type;
         String[] lines = new String[3];
         String path = "src/main/java/";
         String filename = file;
-        ArrayList<Item3> hotel = new ArrayList<Item3>();
+        ArrayList<Item> hotel = new ArrayList<Item>();
         boolean openSuccess = false;
         Scanner keyboardScan = new Scanner(System.in);
 
@@ -78,11 +78,11 @@ class HotelList3 {
                     type = lines[1].trim();
                     rate = Double.parseDouble(lines[2].trim());
                     if (character.equals("R")) {
-                        Room3 room3 = new Room3(type, rate);
-                        hotel.add(room3);
+                        Room room = new Room(type, rate);
+                        hotel.add(room);
                     } else if (character.equals("M")) {
-                        Meal3 meal3 = new Meal3(type, rate);
-                        hotel.add(meal3);
+                        Meal meal = new Meal(type, rate);
+                        hotel.add(meal);
                     }
                 }
             } catch (FileNotFoundException e) {
@@ -98,12 +98,12 @@ class HotelList3 {
 }
 
 
-class Customer3 {
+class Customer {
     private String name;
     private int cashBack, singleRooms, twinRooms, trippleRooms, singleDormRooms, mealHeads;
     private Double singleRoomsPrice, twinRoomsPrice, trippleRoomsPrice, singleDormRoomsPrice, mealHeadsPrice;
 
-    public Customer3(String n) {
+    public Customer(String n) {
         name = n;
         cashBack = 0; singleRooms = 0; twinRooms = 0; trippleRooms = 0; singleDormRooms = 0; mealHeads = 0;
         singleRoomsPrice = 0.00; twinRoomsPrice = 0.00; trippleRoomsPrice = 0.00; singleDormRoomsPrice = 0.00; mealHeadsPrice = 0.00;
@@ -134,13 +134,13 @@ class Customer3 {
     public double getMealHeadsPrice() { return mealHeadsPrice; }
 }
 
-class Booking3 {
+class Booking {
     int bookingID;
     public static int flag;
-    ArrayList<Customer3> CL = new ArrayList<Customer3>();
+    ArrayList<Customer> CL = new ArrayList<Customer>();
     Double totsales = 0.00;
-    HotelList3 h = new HotelList3();
-    ArrayList<Item3> hl = h.menu("hotel.txt");
+    HotelList h = new HotelList();
+    ArrayList<Item> hl = h.menu("hotel.txt");
     public double getRatePlus(int i) {
         return hl.get(i).getRate() + (hl.get(i).getRate() * 0.1) + ((hl.get(i).getRate() + (hl.get(i).getRate() * 0.1)) * 0.07);
     }
@@ -169,21 +169,21 @@ class Booking3 {
         return 0;
     }
 
-    public Booking3() {
+    public Booking() {
         String path = "src/main/java/";
-        String filename = "bookings_errors.txt";
+        String filename = "bookings.txt";
+//        String filenameError = "bookings_errors.txt";
         Scanner scanner = new Scanner(System.in);
-        Customer3 c1 = new Customer3("");
+        Customer c1 = new Customer("");
         boolean openSuccess = false;
         int expectedCol = 8;
-//        System.out.println(hl.get(0).getType());
         while(!openSuccess) {
             try (
                     Scanner keyScan = new Scanner(new FileInputStream(path + filename), "UTF-8");
-                    ) {
+            ) {
                 openSuccess = true;
                 System.out.printf("\nRead booking data from file %s%s \n\n\n", path, filename);
-                ArrayList<Customer3> CL = new ArrayList<Customer3>();
+                ArrayList<Customer> CL = new ArrayList<Customer>();
 
                 ArrayList<Integer> ID = new ArrayList<Integer>();
                 ArrayList<Integer> night = new ArrayList<Integer>();
@@ -202,9 +202,6 @@ class Booking3 {
                 while (keyScan.hasNext()) {
                     line = keyScan.nextLine();
                     col = line.split(",");
-
-
-
                     name.add(col[1].trim());
                     ID.add(parseAndValidate(col, 0, expectedCol));
                     if(ID.get(in) == -1) {
@@ -262,18 +259,18 @@ class Booking3 {
                     c1.setMealHeads(meal.get(i) * night.get(i));
                     c1.setMealHeadsPrice(meal.get(i) * night.get(i) * hl.get(4).getRate());
 
-                    ArrayList<Item3> item3s = new ArrayList<Item3>();
-                    item3s.add(new Room3("R", hl.get(0).getRate(), single.get(i)));
-                    item3s.add(new Room3("R", hl.get(1).getRate(), twin.get(i)));
-                    item3s.add(new Room3("R", hl.get(2).getRate(), tripple.get(i)));
-                    item3s.add(new Room3("R", hl.get(3).getRate(), singleDorm.get(i)));
-                    item3s.add(new Meal3("M", hl.get(4).getRate(), meal.get(i)));
+                    ArrayList<Item> items = new ArrayList<Item>();
+                    items.add(new Room("R", hl.get(0).getRate(), single.get(i)));
+                    items.add(new Room("R", hl.get(1).getRate(), twin.get(i)));
+                    items.add(new Room("R", hl.get(2).getRate(), tripple.get(i)));
+                    items.add(new Room("R", hl.get(3).getRate(), singleDorm.get(i)));
+                    items.add(new Meal("M", hl.get(4).getRate(), meal.get(i)));
 
 
-                    Customer3 cm = new Customer3(name.get(i));
+                    Customer cm = new Customer(name.get(i));
 
                     boolean duplicate = false;
-                    for (Customer3 c : CL) {
+                    for (Customer c : CL) {
                         if (c.getName().equals(cm.getName())) {
                             duplicate = true;
                             c.setSingleRooms(single.get(i));
@@ -288,7 +285,7 @@ class Booking3 {
                     if (!duplicate) CL.add(cm);
 
                     bookingID = ID.get(i);
-                    process(bookingID, cm, night.get(i), item3s);
+                    process(bookingID, cm, night.get(i), items);
 
                 }
 
@@ -302,23 +299,23 @@ class Booking3 {
         scanner.close();
 
         System.out.println("===== Room Summary =====");
-        System.out.printf("Twin Room          total sales = %5d rooms         %,.2f  Bahts\n", c1.getTwinRooms(), c1.getTwinRoomsPrice());
-        System.out.printf("Single Dorm Bed    total sales = %5d rooms         %,.2f  Bahts\n", c1.getSingleDormRooms(), c1.getSingleDormRoomsPrice());
-        System.out.printf("Triple Room        total sales = %5d rooms         %,.2f  Bahts\n", c1.getTrippleRooms(), c1.getTrippleRoomsPrice());
-        System.out.printf("Single Room        total sales = %5d rooms         %,.2f  Bahts\n\n", c1.getSingleRooms(), c1.getSingleRoomsPrice());
+        System.out.printf("%-18s total sales = %5d rooms        %,12.2f  Bahts\n", hl.get(1).getType(), c1.getTwinRooms(), c1.getTwinRoomsPrice());
+        System.out.printf("%-18s total sales = %5d rooms        %,12.2f  Bahts\n", hl.get(3).getType(), c1.getSingleDormRooms(), c1.getSingleDormRoomsPrice());
+        System.out.printf("%-18s total sales = %5d rooms        %,12.2f  Bahts\n", hl.get(2).getType(), c1.getTrippleRooms(), c1.getTrippleRoomsPrice());
+        System.out.printf("%-18s total sales = %5d rooms        %,12.2f  Bahts\n\n", hl.get(0).getType() ,c1.getSingleRooms(), c1.getSingleRoomsPrice());
         System.out.println("===== Meal Summary =====");
-        System.out.printf("Breakfast          total sales = %5d heads         %,.2f  Bahts\n", c1.getMealHeads(), c1.getMealHeadsPrice());
+        System.out.printf("%-18s total sales = %5d heads        %,12.2f  Bahts\n", hl.get(4).getType(),c1.getMealHeads(), c1.getMealHeadsPrice());
     }
 
-    public void process(int id, Customer3 c, int n, ArrayList<Item3> item3s) {
+    public void process(int id, Customer c, int n, ArrayList<Item> items) {
         double totalRoomPrice;
-        double totalMealPrice = item3s.get(4).getBill() * n;
+        double totalMealPrice = items.get(4).getBill() * n;
         double totalBill = 0;
         double finalBill;
         int cashback;
         int redeem = c.getCashBack();
 
-        for(Item3 i : item3s) {
+        for(Item i : items) {
             totalBill += i.getBill();
         }
 
@@ -334,7 +331,7 @@ class Booking3 {
 
         finalBill = totalBill - redeem;
 
-        System.out.printf("Booking%3d, %s,%4d nights   >> Single Room (  %3d)    Twin Room (  %3d)    Triple Room (  %3d)    Single Dorm Bed (  %3d)    Breakfast(  %3d)\n", id, c.getName(), n, item3s.get(0).getQty(), item3s.get(1).getQty(), item3s.get(2).getQty(), item3s.get(3).getQty(), item3s.get(4).getQty());
+        System.out.printf("Booking%3d, %s,%4d nights   >> %-12s ( %3d)  %12s ( %3d)  %12s ( %3d)  %12s ( %3d)  %12s ( %3d)\n",id, c.getName(), n, hl.get(0).getType(), items.get(0).getQty(), hl.get(1).getType(), items.get(1).getQty(), hl.get(2).getType(), items.get(2).getQty(), hl.get(3).getType(), items.get(3).getQty(), hl.get(4).getType(), items.get(4).getQty());
         System.out.printf("Available cashback = %-,5d      >> Total room price++    =   %,10.2f    with service charge and VAT\n", c.getCashBack(), totalRoomPrice);
         System.out.printf("                                >> Total meal price      =   %,10.2f\n", totalMealPrice);
         System.out.printf("                                >> Total bill            =   %,10.2f    redeem = %,d\n", totalBill, redeem);
@@ -344,8 +341,8 @@ class Booking3 {
     }
 }
 
-public class MainDemo3 {
+public class Main {
     public static void main(String[] args) {
-        Booking3 b1 = new Booking3();
+        Booking b1 = new Booking();
     }
 }
