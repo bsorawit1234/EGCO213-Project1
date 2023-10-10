@@ -1,3 +1,8 @@
+// Sorawit Phattharakundilok    6513122
+// Thinnaphat Phumphotingam     6513166
+// Wish Semangern               6513175
+// Napasrapee Satittham         6513012
+
 import java.io.*;
 import java.util.*;
 
@@ -171,8 +176,8 @@ class Booking {
 
     public Booking() {
         String path = "src/main/java/";
-        String filename = "bookings_errors.txt";
-//        String filenameError = "bookings_errors.txt";
+        String filename = "bookings.txt";
+//        String filename = "bookings_errors.txt";
         Scanner scanner = new Scanner(System.in);
         Customer c1 = new Customer("");
         boolean openSuccess = false;
