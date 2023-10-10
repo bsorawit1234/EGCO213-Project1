@@ -136,7 +136,7 @@ class Customer3 {
 
 class Booking3 {
     int bookingID;
-    public static int flag;
+    public static int flag = 1;
     ArrayList<Customer3> CL = new ArrayList<Customer3>();
     Double totsales = 0.00;
     HotelList3 h = new HotelList3();
@@ -171,7 +171,8 @@ class Booking3 {
 
     public Booking3() {
         String path = "src/main/java/";
-        String filename = "bookings_errors.txt";
+        String filename = "bookings.txt";
+//        String filename = "bookings_errors.txt";
         Scanner scanner = new Scanner(System.in);
         Customer3 c1 = new Customer3("");
         boolean openSuccess = false;
